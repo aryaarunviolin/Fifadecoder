@@ -59,7 +59,7 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
         </div>
 
-        <div className="header-controls" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+        <div className="header-controls" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }} role="navigation" aria-label="Main Navigation">
           {/* Prominent Language Switcher */}
           <div className="lang-switcher-container" style={{
             display: 'flex',
@@ -71,10 +71,12 @@ export const Header: React.FC<HeaderProps> = ({
             borderRadius: '8px',
             boxShadow: '0 0 10px rgba(212, 175, 55, 0.2)'
           }}>
-            <Globe size={18} style={{ color: 'var(--color-accent-gold)' }} />
+            <Globe size={18} style={{ color: 'var(--color-accent-gold)' }} aria-hidden="true" />
             <select
               value={language}
               onChange={(e) => setLanguage(e.target.value)}
+              aria-label="Select Language"
+              title="Select Language"
               style={{
                 background: 'transparent',
                 border: 'none',
@@ -101,8 +103,8 @@ export const Header: React.FC<HeaderProps> = ({
             </select>
           </div>
 
-          <div className={`api-status`}>
-            <span className={`status-dot ${getStatusClass()}`}></span>
+          <div className={`api-status`} aria-live="polite">
+            <span className={`status-dot ${getStatusClass()}`} aria-hidden="true"></span>
             <span>{getStatusText()}</span>
           </div>
           
@@ -110,10 +112,12 @@ export const Header: React.FC<HeaderProps> = ({
             className="btn-icon" 
             onClick={() => setIsConfigOpen(!isConfigOpen)} 
             title="Locker Room Settings"
-            aria-label="Settings Toggle"
+            aria-label={isConfigOpen ? "Close Locker Room Settings" : "Open Locker Room Settings"}
+            aria-expanded={isConfigOpen}
+            aria-controls="locker-room-settings"
             style={{ position: 'relative' }}
           >
-            <Settings size={20} />
+            <Settings size={20} aria-hidden="true" />
             {!apiKey && !useMock && (
               <span style={{
                 position: 'absolute',
@@ -123,26 +127,28 @@ export const Header: React.FC<HeaderProps> = ({
                 width: 8,
                 height: 8,
                 borderRadius: '50%'
-              }} />
+              }} aria-label="Action required" />
             )}
           </button>
         </div>
       </div>
       
       {/* Broadcast selling point banner */}
-      <div style={{
-        background: 'linear-gradient(90deg, rgba(212, 175, 55, 0.1) 0%, rgba(0, 229, 255, 0.05) 100%)',
-        borderLeft: '4px solid var(--color-accent-gold)',
-        padding: '0.5rem 1rem',
-        borderRadius: '0 8px 8px 0',
-        fontSize: '0.85rem',
-        color: 'var(--color-text-secondary)',
-        fontWeight: 500,
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center'
-      }}>
-        <span>🌍 <strong>Multilingual Intelligence Room:</strong> Real-time laws of the game decoded instantly in 12 languages.</span>
+      <div 
+        role="banner"
+        style={{
+          background: 'linear-gradient(90deg, rgba(212, 175, 55, 0.1) 0%, rgba(0, 229, 255, 0.05) 100%)',
+          borderLeft: '4px solid var(--color-accent-gold)',
+          padding: '0.5rem 1rem',
+          borderRadius: '0 8px 8px 0',
+          fontSize: '0.85rem',
+          color: 'var(--color-text-secondary)',
+          fontWeight: 500,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+        <span><span aria-hidden="true">🌍</span> <strong>Multilingual Intelligence Room:</strong> Real-time laws of the game decoded instantly in 12 languages.</span>
         <span style={{ fontSize: '0.75rem', color: 'var(--color-accent-gold)', textTransform: 'uppercase', fontWeight: 'bold' }}>FIFA World Cup 2026 Companion</span>
       </div>
     </header>

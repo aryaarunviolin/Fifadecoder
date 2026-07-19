@@ -39,15 +39,28 @@ export const TournamentBracket: React.FC<TournamentBracketProps> = ({ fixtures, 
           return (
             <div key={stage} className={`bracket-column stage-${stage}`}>
               <h3 className="stage-title">{getStageTitle(stage)}</h3>
-              <div className="match-list">
+              <div className="match-list" role="list" aria-label={`Matches in ${getStageTitle(stage)}`}>
                 {stageMatches.map((match) => (
-                  <div key={match.id} className="match-card" onClick={() => onSelectMatch(match)}>
+                  <div 
+                    key={match.id} 
+                    className="match-card" 
+                    onClick={() => onSelectMatch(match)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        onSelectMatch(match);
+                      }
+                    }}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`Match: ${match.homeTeam} versus ${match.awayTeam}`}
+                  >
                     <div className="match-team">
-                      <span>{match.homeLogo} {match.homeTeam}</span>
+                      <span><span aria-hidden="true">{match.homeLogo}</span> {match.homeTeam}</span>
                       <span className="match-score">{match.status === 'NS' ? '-' : match.homeScore}</span>
                     </div>
                     <div className="match-team">
-                      <span>{match.awayLogo} {match.awayTeam}</span>
+                      <span><span aria-hidden="true">{match.awayLogo}</span> {match.awayTeam}</span>
                       <span className="match-score">{match.status === 'NS' ? '-' : match.awayScore}</span>
                     </div>
                   </div>

@@ -243,7 +243,17 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({
               <div
                 key={event.id}
                 onClick={() => event.isOfficiating && !isLoading && onSelectEvent(event)}
+                onKeyDown={(e) => {
+                  if (event.isOfficiating && !isLoading && (e.key === 'Enter' || e.key === ' ')) {
+                    e.preventDefault();
+                    onSelectEvent(event);
+                  }
+                }}
                 className={`preset-card ${event.isOfficiating ? 'officiating' : ''} ${isSelected ? 'active' : ''}`}
+                role={event.isOfficiating ? "button" : "listitem"}
+                tabIndex={event.isOfficiating ? 0 : -1}
+                aria-label={`Minute ${event.minute}, ${event.type}. ${event.text}`}
+                aria-current={isSelected ? "true" : "false"}
                 style={{
                   display: 'flex',
                   alignItems: 'flex-start',

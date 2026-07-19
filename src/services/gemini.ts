@@ -193,23 +193,35 @@ export interface EnrichedAPIError {
   body: string;
 }
 
-export function parseGeminiError(err: any): EnrichedAPIError {
+export function parseGeminiError(err: unknown): EnrichedAPIError {
   let status: number | string = 'Unknown';
-  let message = err.message || String(err);
+  
+  // Safe cast for error properties
+  const errorObj = typeof err === 'object' && err !== null ? (err as Record<string, unknown>) : {};
+  let message = errorObj.message ? String(errorObj.message) : String(err);
   let body = '';
 
-  // Log full error object to browser console
-  console.error("Full Gemini API Error Object:", err);
+  // Log full error object to browser console (masking if it contains key)
+  const safeLogErr = JSON.parse(JSON.stringify(err, (k, v) => 
+    (typeof v === 'string' && v.includes('AIza')) ? v.replace(/AIza[a-zA-Z0-9_-]+/, 'REDACTED_API_KEY') : v
+  ));
+  console.error("Full Gemini API Error Object:", safeLogErr);
 
-  if (err.status) {
-    status = err.status;
+  if (errorObj.status) {
+    status = errorObj.status as number | string;
   }
 
   try {
-    if (err.response) {
-      body = JSON.stringify(err.response, null, 2);
+    if (errorObj.response) {
+      body = JSON.stringify(errorObj.response, null, 2);
     }
   } catch (e) {}
+  
+  // Sanitize API Key leaks in body or message
+  if (body) {
+    body = body.replace(/AIza[a-zA-Z0-9_-]+/g, 'REDACTED_API_KEY');
+  }
+  message = message.replace(/AIza[a-zA-Z0-9_-]+/g, 'REDACTED_API_KEY');
 
   const msgLower = message.toLowerCase();
   

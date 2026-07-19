@@ -357,7 +357,7 @@ export default function App() {
       `}</style>
 
       {currentView === 'instructions' ? (
-        <Instructions />
+        <Instructions onStartDemo={() => setCurrentView('timeline')} />
       ) : currentView === 'bracket' ? (
         <div style={{ marginTop: '1.25rem' }}>
           <TournamentBracket fixtures={fixtures} onSelectMatch={handleSelectMatchFromBracket} language={language} />
@@ -394,9 +394,28 @@ export default function App() {
 
             <div className="dashboard-display">
               {isLoading ? (
-                <div className="glass-panel loader-container">
-                  <div className="ref-whistle-spinner"></div>
-                  <p>{t('timeline.fetching', language)}</p>
+                <div className="glass-panel loader-container" style={{ flex: '1.2', border: '1px solid var(--color-var-review)', position: 'relative', overflow: 'hidden' }}>
+                  <div className="var-scan-line"></div>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', zIndex: 1 }}>
+                    <div style={{ padding: '0.5rem 1.5rem', background: 'var(--color-var-review)', color: '#fff', fontWeight: 800, fontSize: '1.2rem', letterSpacing: '2px', borderRadius: '4px' }}>
+                      VAR REVIEW IN PROGRESS
+                    </div>
+                    <p style={{ color: 'var(--color-text-secondary)', margin: 0 }}>{t('timeline.fetching', language)}</p>
+                    <div className="ref-whistle-spinner" style={{ borderColor: 'var(--color-var-review)', borderBottomColor: 'transparent', width: '40px', height: '40px', marginTop: '1rem' }}></div>
+                  </div>
+                  <style>{`
+                    .var-scan-line {
+                      position: absolute;
+                      top: 0; left: 0; width: 100%; height: 5px;
+                      background: var(--color-var-review);
+                      box-shadow: 0 0 15px 5px rgba(255,145,0,0.5);
+                      animation: scan 2s infinite linear;
+                    }
+                    @keyframes scan {
+                      0% { top: -10%; }
+                      100% { top: 110%; }
+                    }
+                  `}</style>
                 </div>
               ) : (
                 <>
