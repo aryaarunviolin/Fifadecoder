@@ -14,6 +14,7 @@ import {
   OFFICIAL_2026_FIXTURES,
   MOCK_REPLAY_EVENTS
 } from './services/matchFeed';
+import { getEffectiveApiKey, shouldOpenConfig, getInitialMockState } from './utils/config';
 import './App.css';
 
 export default function App() {
@@ -23,18 +24,14 @@ export default function App() {
     localStorage.getItem('gemini_api_key') || ''
   );
 
-  const effectiveApiKey = apiKey || defaultApiKey;
+  const effectiveApiKey = getEffectiveApiKey(defaultApiKey, apiKey);
 
-  const [useMock, setUseMock] = useState<boolean>(() => {
-    const saved = localStorage.getItem('gemini_use_mock');
-    if (saved !== null) {
-      return saved === 'true';
-    }
-    return !effectiveApiKey;
-  });
+  const [useMock, setUseMock] = useState<boolean>(() => 
+    getInitialMockState(defaultApiKey, apiKey, localStorage.getItem('gemini_use_mock'))
+  );
 
-  const [isConfigOpen, setIsConfigOpen] = useState<boolean>(
-    !localStorage.getItem('gemini_api_key') && !defaultApiKey
+  const [isConfigOpen, setIsConfigOpen] = useState<boolean>(() =>
+    shouldOpenConfig(defaultApiKey, localStorage.getItem('gemini_api_key'))
   );
 
   // User Preference States

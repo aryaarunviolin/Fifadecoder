@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseGeminiError } from './gemini';
+import { parseGeminiError, cleanAndParseJSON } from './gemini';
 
 describe('Gemini API Service', () => {
   describe('parseGeminiError', () => {
@@ -50,10 +50,38 @@ describe('Gemini API Service', () => {
         } 
       };
       const parsed = parseGeminiError(mockError);
-      // Wait, currently parseGeminiError just stringifies the response. We should test that it sanitizes it.
-      // Since we haven't implemented sanitization yet, let's write the test and then we will update the service.
       expect(parsed.body).not.toContain('AIzaSySecretKey');
       expect(parsed.body).toContain('REDACTED_API_KEY');
     });
   });
+
+  describe('cleanAndParseJSON', () => {
+    it('should correctly parse standard JSON', () => {
+      const result = cleanAndParseJSON('{"verdict": "RED_CARD"}') as any;
+      expect(result.verdict).toBe('RED_CARD');
+    });
+
+    it('should strip markdown code blocks and parse', () => {
+      const jsonStr = `
+      \`\`\`json
+      {
+        "verdict": "VAR_REVIEW"
+      }
+      \`\`\`
+      `;
+      const result = cleanAndParseJSON(jsonStr) as any;
+      expect(result.verdict).toBe('VAR_REVIEW');
+    });
+
+    it('should strip generic markdown blocks and parse', () => {
+      const jsonStr = `
+      \`\`\`
+      {"verdict": "YELLOW_CARD"}
+      \`\`\`
+      `;
+      const result = cleanAndParseJSON(jsonStr) as any;
+      expect(result.verdict).toBe('YELLOW_CARD');
+    });
+  });
 });
+

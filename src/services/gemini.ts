@@ -130,7 +130,7 @@ Return a strict JSON object matching this structure:
 
 Important: Return ONLY the JSON object. Do not wrap it in markdown code blocks (\`\`\`json ... \`\`\`).`;
 
-function cleanAndParseJSON(text: string): any {
+export function cleanAndParseJSON(text: string): unknown {
   let clean = text.trim();
   if (clean.startsWith('```')) {
     clean = clean.replace(/^```[a-zA-Z]*\s*/, '');
@@ -180,7 +180,7 @@ Return them as a strict JSON array of objects matching this structure (return ON
     const result = await model.generateContent(prompt);
     const responseText = result.response.text();
     console.log('[Gemini Response] Ingested live match timeline successfully.');
-    return cleanAndParseJSON(responseText);
+    return cleanAndParseJSON(responseText) as any[];
   } catch (error) {
     console.error('[Gemini Response] Ingestion failed.');
     return [];
