@@ -5,6 +5,7 @@ import { EventTimeline } from './components/EventTimeline';
 import { DecisionRoom } from './components/DecisionRoom';
 import { ChatInterface } from './components/ChatInterface';
 import { TournamentBracket } from './components/TournamentBracket';
+import { Instructions } from './components/Instructions';
 import { analyzeAnnouncement, sendChatFollowUp, fetchLiveEventsFromSearch, AnalysisResult, ChatMessage } from './services/gemini';
 import { t } from './services/i18n';
 import {
@@ -16,20 +17,32 @@ import {
 import './App.css';
 
 export default function App() {
-  // Config & API Keys
-  const [apiKey, setApiKey] = useState<string>(() => localStorage.getItem('gemini_api_key') || '');
+  const defaultApiKey = ((import.meta as any).env?.VITE_GEMINI_API_KEY as string) || '';
+
+  const [apiKey, setApiKey] = useState<string>(() =>
+    localStorage.getItem('gemini_api_key') || ''
+  );
+
+  const effectiveApiKey = apiKey || defaultApiKey;
+
   const [useMock, setUseMock] = useState<boolean>(() => {
     const saved = localStorage.getItem('gemini_use_mock');
-    return saved !== null ? saved === 'true' : !localStorage.getItem('gemini_api_key');
+    if (saved !== null) {
+      return saved === 'true';
+    }
+    return !effectiveApiKey;
   });
-  const [isConfigOpen, setIsConfigOpen] = useState<boolean>(!localStorage.getItem('gemini_api_key'));
+
+  const [isConfigOpen, setIsConfigOpen] = useState<boolean>(
+    !localStorage.getItem('gemini_api_key') && !defaultApiKey
+  );
 
   // User Preference States
   const [knowledgeLevel, setKnowledgeLevel] = useState<'Beginner Fan' | 'Casual Viewer' | 'Tactical Analyst'>('Casual Viewer');
   const [language, setLanguage] = useState<string>('English');
 
   // View State
-  const [currentView, setCurrentView] = useState<'timeline' | 'bracket'>('timeline');
+  const [currentView, setCurrentView] = useState<'timeline' | 'bracket' | 'instructions'>('instructions');
 
   // Match Fixture List and Selector
   const [fixtures, setFixtures] = useState<FixtureInfo[]>(OFFICIAL_2026_FIXTURES);
@@ -54,9 +67,7 @@ export default function App() {
   const [apiError, setApiError] = useState<any>(null);
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
 
-  // Debug Diagnostics
-  const [lastRequestTimestamp, setLastRequestTimestamp] = useState<string>('N/A');
-  const [lastResponseStatus, setLastResponseStatus] = useState<string>('N/A');
+
 
   // Loaders & Indicators
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -138,11 +149,10 @@ export default function App() {
     setApiError(null);
     setChatHistory([]);
     setSearchErrorText('');
-    setLastRequestTimestamp(new Date().toLocaleTimeString());
 
     try {
       // Query Gemini Google Search Grounding to find events
-      const retrievedEvents = await fetchLiveEventsFromSearch(searchQuery, apiKey, language);
+      const retrievedEvents = await fetchLiveEventsFromSearch(searchQuery, effectiveApiKey, language);
       
       if (retrievedEvents && retrievedEvents.length > 0) {
         // Parse team names from search query
@@ -183,18 +193,15 @@ export default function App() {
         setFixtures(prev => [newSearchedFixture, ...prev]);
         setSelectedFixture(newSearchedFixture);
         setEvents(retrievedEvents);
-        setLastResponseStatus('200 OK');
       } else {
         // If data is unavailable or match is not 2026 World Cup, set error placeholder text
         setSearchErrorText(t('timeline.empty', language));
         setEvents([]);
-        setLastResponseStatus('Empty response');
       }
     } catch (err: any) {
       console.error(err);
       setSearchErrorText('Error communicating with search engine. Verify your Gemini API key is configured.');
       setEvents([]);
-      setLastResponseStatus(`${err.status || 'Error'} - ${err.message}`);
     } finally {
       setIsSearchingLive(false);
       setIsLoading(false);
@@ -208,7 +215,6 @@ export default function App() {
     setActiveResult(null);
     setApiError(null);
     setChatHistory([]);
-    setLastRequestTimestamp(new Date().toLocaleTimeString());
 
     try {
       const result = await analyzeAnnouncement(
@@ -216,15 +222,13 @@ export default function App() {
         null,
         knowledgeLevel,
         language,
-        apiKey || null,
+        effectiveApiKey || null,
         useMock
       );
       setActiveResult(result);
-      setLastResponseStatus('200 OK');
     } catch (e: any) {
       console.error(e);
       setApiError(e);
-      setLastResponseStatus(`${e.status || 'Error'} - ${e.message}`);
     } finally {
       setIsLoading(false);
     }
@@ -246,7 +250,7 @@ export default function App() {
         activeResult,
         knowledgeLevel,
         language,
-        apiKey || null,
+        effectiveApiKey || null,
         useMock
       );
       setChatHistory(prev => [...prev, { role: 'model', content: response }]);
@@ -328,6 +332,12 @@ export default function App() {
       {/* View Toggle Tabs */}
       <div style={{ display: 'flex', gap: '1rem', marginTop: '1.25rem', padding: '0 1.25rem' }}>
         <button 
+          className={`btn-primary ${currentView === 'instructions' ? 'active-tab' : 'inactive-tab'}`}
+          onClick={() => setCurrentView('instructions')}
+        >
+          Instructions
+        </button>
+        <button 
           className={`btn-primary ${currentView === 'bracket' ? 'active-tab' : 'inactive-tab'}`}
           onClick={() => setCurrentView('bracket')}
         >
@@ -346,7 +356,9 @@ export default function App() {
         .inactive-tab { background: rgba(0,0,0,0.3); color: var(--color-text-secondary); border: 1px solid rgba(255,255,255,0.1); }
       `}</style>
 
-      {currentView === 'bracket' ? (
+      {currentView === 'instructions' ? (
+        <Instructions />
+      ) : currentView === 'bracket' ? (
         <div style={{ marginTop: '1.25rem' }}>
           <TournamentBracket fixtures={fixtures} onSelectMatch={handleSelectMatchFromBracket} language={language} />
         </div>
@@ -404,20 +416,6 @@ export default function App() {
           </main>
         </>
       )}
-
-      {/* Debug Mode Panel */}
-      <footer className="glass-panel" style={{ marginTop: '2rem', padding: '1rem 1.5rem', background: 'rgba(5, 5, 8, 0.95)', border: '1px solid rgba(255,255,255,0.05)', flexShrink: 0 }}>
-        <h3 style={{ fontFamily: 'var(--font-heading)', textTransform: 'uppercase', color: 'var(--color-pitch-green)', fontSize: '0.9rem', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem', letterSpacing: '0.5px' }}>
-          <span>🛠️</span> DEBUG MODE PANEL
-        </h3>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', fontSize: '0.8rem' }}>
-          <div><strong>Current Model:</strong> <span style={{ color: 'var(--color-text-secondary)' }}>gemini-2.5-flash</span></div>
-          <div><strong>API Key Status:</strong> <span style={{ color: apiKey ? 'var(--color-pitch-green)' : '#FF0D00' }}>{apiKey ? 'Configured' : 'Missing'}</span></div>
-          <div><strong>Mock Mode:</strong> <span style={{ color: useMock ? 'var(--color-yellow-card)' : 'var(--color-pitch-green)' }}>{useMock ? 'ACTIVE (Offline)' : 'INACTIVE (Live API)'}</span></div>
-          <div><strong>Last Request:</strong> <span style={{ color: 'var(--color-text-secondary)' }}>{lastRequestTimestamp}</span></div>
-          <div><strong>Last Response Status:</strong> <span style={{ color: lastResponseStatus.includes('200') ? 'var(--color-pitch-green)' : '#FF0D00' }}>{lastResponseStatus}</span></div>
-        </div>
-      </footer>
     </div>
   );
 }

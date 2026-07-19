@@ -85,7 +85,7 @@ const PRESET_MOCK_DATA: Record<string, AnalysisResult> = {
     verdict: 'YELLOW_CARD',
     verdictText: 'YELLOW CARD (SIMULATION)',
     retrievedFacts: [
-      'Otamendi fell inside the penalty box.',
+      'Player fell inside the penalty box.',
       'Referee issued a yellow card for simulation (diving).',
       'VAR checked in the background and did not recommend an On-Field Review.'
     ],
