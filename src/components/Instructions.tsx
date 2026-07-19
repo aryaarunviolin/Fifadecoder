@@ -1,5 +1,5 @@
 import React from 'react';
-import { Globe, ShieldAlert, Award, Search, Trophy, PlayCircle } from 'lucide-react';
+import { Globe, ShieldAlert, Search, Trophy, PlayCircle } from 'lucide-react';
 
 interface InstructionsProps {
   onStartDemo: () => void;

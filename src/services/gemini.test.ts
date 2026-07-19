@@ -18,7 +18,6 @@ describe('Gemini API Service', () => {
     });
 
     it('should correctly identify Quota Exceeded errors (429)', () => {
-      const mockError = { response: { status: 429 } };
       // Passing it as status inside an error object
       const err = new Error('Quota exceeded');
       (err as any).status = 429;

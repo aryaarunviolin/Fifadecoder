@@ -202,7 +202,7 @@ export function parseGeminiError(err: unknown): EnrichedAPIError {
   let body = '';
 
   // Log full error object to browser console (masking if it contains key)
-  const safeLogErr = JSON.parse(JSON.stringify(err, (k, v) => 
+  const safeLogErr = JSON.parse(JSON.stringify(err, (_k, v) => 
     (typeof v === 'string' && v.includes('AIza')) ? v.replace(/AIza[a-zA-Z0-9_-]+/, 'REDACTED_API_KEY') : v
   ));
   console.error("Full Gemini API Error Object:", safeLogErr);
@@ -248,7 +248,7 @@ export function parseGeminiError(err: unknown): EnrichedAPIError {
   return {
     status,
     message,
-    body: body || err.stack || JSON.stringify(err, null, 2)
+    body: body || (err as any).stack || JSON.stringify(err, null, 2)
   };
 }
 
@@ -314,7 +314,7 @@ ${imageBase64 ? 'An image of the stadium decision screen is attached.' : ''}`;
     const responseText = result.response.text();
     console.log('[Gemini Response] Successfully received decision breakdown.');
     return cleanAndParseJSON(responseText) as AnalysisResult;
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('[Gemini Response] Request failed.');
     throw parseGeminiError(error);
   }
